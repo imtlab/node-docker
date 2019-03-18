@@ -1,0 +1,13 @@
+function node_install() {
+  apt-get update
+  $minimal_apt_get_install $packages
+  rm -rf /var/lib/apt/lists/*
+  node_DOWNLOAD_URL="https://nodejs.org/dist/v${node_VERSION}/node-v${node_VERSION}-linux-x64.tar.gz"
+	curl -fSL -o node.tar.gz $node_DOWNLOAD_URL
+	echo "$node_DOWNLOAD_SHA256 node.tar.gz" | sha256sum -c -
+  mkdir -p /usr/local/lib/nodejs
+  tar -zxf node.tar.gz -C /usr/local/lib/nodejs --strip-components=1
+  rm -rf node.tar.gz
+}
+
+
