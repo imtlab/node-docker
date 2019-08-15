@@ -1,13 +1,12 @@
 image: docker:stable
 
 variables:
-  DOCKER_HOST: tcp://localhost:2375/
   DOCKER_DRIVER: overlay2
   NAME: imtlab/baseimage-node
-  VERSION: "18.0.0"
+  VERSION: "18.0.1"
 
 services:
-  - docker:dind
+  - docker:18.09.7-dind
 
 stages:
   - build
@@ -27,13 +26,25 @@ build-10.15.3:
     - make build_node10153
     - docker save $NAME:10.15.3-$VERSION | gzip > build-10_15_3.tgz
 
+build-10.16.3:
+  stage: build
+  artifacts:
+   paths:
+    - build-10_16_3.tgz
+   expire_in: 1 day
+  script:
+    - make build_node10163
+    - docker save $NAME:10.16.3-$VERSION | gzip > build-10_16_3.tgz
+
 test-all:
   stage: test
   script:
-    - gunzip -c build-10_15_3.tgz | docker load 
+    - gunzip -c build-10_15_3.tgz | docker load
+    - gunzip -c build-10_16_3.tgz | docker load
     - make test
   dependencies:
     - build-10.15.3
+    - build-10.16.3
 
 push-all:
   stage: push
@@ -41,7 +52,9 @@ push-all:
     - tags
   script:
     - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-    - gunzip -c build-10_15_3.tgz | docker load 
+    - gunzip -c build-10_15_3.tgz | docker load
+    - gunzip -c build-10_16_3.tgz | docker load
     - make release
   dependencies:
     - build-10.15.3
+    - build-10.16.3
